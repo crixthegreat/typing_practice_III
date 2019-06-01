@@ -34,6 +34,8 @@ def gen_anime_sprite(img, grid_x, grid_y, delay, loop, pos_x, pos_y):
     _seq = pyglet.image.Animation.from_image_sequence(_anime, delay, loop)
     return cocos.sprite.Sprite(_seq, position=(pos_x, pos_y))
 
+def alpha_sprite(t):
+    return materials.sprites['alpha_str' + str(t)]
 
 def show_alpha(_str, pos_x=100, pos_y=400):
     """The KEY method of this game
@@ -57,11 +59,12 @@ def show_alpha(_str, pos_x=100, pos_y=400):
         else:
             _str_index = 26
 
-        sprites['alpha_str' + str(_)].visible = True
-        sprites['alpha_str' + str(_)].image = alpha_image[_str_index]
-        sprites['alpha_str' + str(_)].position = pos_x + _ * 50, pos_y
-        sprites['alpha_str' + str(_)].scale = random.randrange(8, 20) / 10
-        sprites['alpha_str' + str(_)].rotation = random.randrange(-30, 30)
+        alpha_sprite(_).visible = True
+        alpha_sprite(_).image = alpha_image[_str_index]
+        alpha_sprite(_).position = pos_x + _ * 50, pos_y
+        alpha_sprite(_).scale = random.randrange(8, 20) / 10
+        alpha_sprite(_).rotation = random.randrange(-30, 30)
+
 
 mixer.init()
 cocos.director.director.init(width=800, height=600, caption=Const.GAME_TITLE)
