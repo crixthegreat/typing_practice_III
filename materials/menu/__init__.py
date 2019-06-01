@@ -4,7 +4,7 @@
 #https://github.com/crixthegreat/
 #codetime: 2019/5/28 17:03:36
 import os
-import data.Const as Const
+from data import Const, highscore
 import pyglet
 import cocos
 import materials
@@ -41,4 +41,12 @@ def show():
     materials.main_scr.bg_music.stop()
     materials.main_scr.highscore_music.stop()
     bg_music.play(-1)
+
+def show_highscore():
+    """display the highscore only for menu screen
+    """
+    _data = highscore.get_highscore()
+    for _ in range(10):
+        materials.labels['highscore_label' + str(_)].element.text = '{:>10}'.format(_data[_][1]) + materials.time_format(_data[_][0])
+
 
