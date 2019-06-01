@@ -70,7 +70,14 @@ class Game(object):
         """display the highscore
         """
         _data = highscore.get_highscore()
+        for _ in range(10):
+            materials.labels['highscore_label' + str(_)].element.text = '{:>10}'.format(_data[_][1]) + materials.time_format(_data[_][0])
+
+
+    def show_best_time(self, level):
         _best = 9999
+        _data = highscore.get_highscore()
+        #print (_data[0], _data[1], self.player_name)
         if level == 'Normal':
             for _ in _data[0:5]:
                 if _[1] == self.player_name:
@@ -81,15 +88,14 @@ class Game(object):
                 if _[1] == self.player_name:
                     _best = _[0]
                     break
-
-        for _ in range(10):
-            materials.labels['highscore_label' + str(_)].element.text = '{:>10}'.format(_data[_][1]) + materials.time_format(_data[_][0])
-
+        #print(_best)
         if _best == 9999:
             materials.main_scr.labels['best_time_label'].element.text = 'Your Best: N/A'
         else:
             materials.main_scr.labels['best_time_label'].element.text = 'Your Best: ' + materials.time_format(_best)
-          
+    
+
+    
     def show_menu(self):
         materials.menu.show()
         materials.menu.labels['player_name_label'].element.text = self.player_name
@@ -100,7 +106,7 @@ class Game(object):
         self.prac_str = materials.main_scr.show(self.level)
         self.time_passed = 0
         self.game_status = 'STARTED'
-        
+        self.show_best_time(self.level)
 
     def show_highscore_name(self, _str):
         """display the name input by the player in HIGHSCORE game mode
@@ -329,6 +335,7 @@ class Main_Screen(ScrollableLayer):
                 # confirm the name when get high score
                 highscore.write_highscore(self.game.level, self.game.player_name, self.game.time_passed)
                 materials.show_alpha('continue')
+                self.game.show_best_time(self.game.level)
                 self.game.game_status = 'END'
             # use BACKSPACE or DELETE key to delete chars
             elif 'BACKSPACE' in key_names or 'DELETE' in key_names:
