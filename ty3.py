@@ -66,8 +66,8 @@ class Game(object):
         self.name_input_text = ''
 
 
-    def show_highscore(self, level):
-        """display the highscore
+    def show_highscore(self):
+        """display the highscore only for menu screen
         """
         _data = highscore.get_highscore()
         for _ in range(10):
@@ -75,6 +75,8 @@ class Game(object):
 
 
     def show_best_time(self, level):
+        """show the best time of the game player
+        """
         _best = 9999
         _data = highscore.get_highscore()
         #print (_data[0], _data[1], self.player_name)
@@ -93,10 +95,11 @@ class Game(object):
             materials.main_scr.labels['best_time_label'].element.text = 'Your Best: N/A'
         else:
             materials.main_scr.labels['best_time_label'].element.text = 'Your Best: ' + materials.time_format(_best)
-    
 
     
     def show_menu(self):
+        """display the menu screen
+        """
         materials.menu.show()
         materials.menu.labels['player_name_label'].element.text = self.player_name
 
@@ -128,10 +131,9 @@ class Game(object):
 
 class Menu_Screen(Layer):
     """The menu layer class, where the player starts the game 
-    and change the game level
+    and changes the game level
     """
     is_event_handler = True
-
 
     def __init__(self, game):
 
@@ -141,23 +143,20 @@ class Menu_Screen(Layer):
         self.keys_pressed = set()
 
         self.image = materials.images['bg_img']
-
         for _, _label in materials.labels.items():
             self.add(_label)
         for _, _label in materials.menu.labels.items():
             self.add(_label)
         materials.menu.labels['level_label'].element.text = self.game.level
         materials.menu.labels['player_name_label'].element.text = self.game.player_name
-
         for _, _sprite in materials.sprites.items():
             self.add(_sprite)
         for _, _sprite in materials.menu.sprites.items():
             self.add(_sprite)
-
         materials.menu.sprites['t2_sprite'].scale = 1.5
 
         self.game.show_menu()
-        self.game.show_highscore(self.game.level)
+        self.game.show_highscore()
 
 
     def on_key_press(self, key, modifiers):
@@ -169,7 +168,6 @@ class Menu_Screen(Layer):
             #Start the game
             self.keys_pressed.clear()
             self.game.show_game()
-            #self.game.show_highscore()
             director.replace(Scene(game_screen))
         # use the LEFT or RIGHT to change the game level
         elif 'LEFT' in key_names:
@@ -182,7 +180,7 @@ class Menu_Screen(Layer):
                 materials.menu.labels['level_label'].element.text = self.game.level
         elif 'F12' in key_names:
             file_test.init_file()
-            self.game.show_highscore(self.game.level)
+            self.game.show_highscore()
 
 
 
@@ -229,6 +227,7 @@ class Main_Screen(ScrollableLayer):
         if self.game.game_status == 'STARTED':
             self.game.time_passed += dt
             #print (self.game.time_passed)
+            # let the background image move by 8 random directions
             if int(self.game.time_passed * 10) % 100 == 0:
                 self._move_dir = random.randrange(8)
             if self._move_dir == 0:
@@ -264,9 +263,7 @@ class Main_Screen(ScrollableLayer):
             if self.ty > 7400:
                 self.ty = 7400
 
-
             materials.main_scr.labels['time_label'].element.text = 'Your time: ' + materials.time_format(self.game.time_passed) 
-            #print(self.tx, self.ty)
             map_layer.set_view(self.tx, self.ty, 800, 600) 
 
     def on_key_press(self, key, modifiers):
@@ -274,14 +271,16 @@ class Main_Screen(ScrollableLayer):
         # can also use the '.isalpha' method
         _str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         # use a set(keys_pressed) to store all the keys pressed
+        # the number '983547510784' means 'SHIFT + SPACE' key
         if key != 983547510784:
             self.keys_pressed.add(key)
         key_names = [pyglet.window.key.symbol_string(k) for k in self.keys_pressed]
+        # press the SPACE key to return to the title anywhere any time
         if 'SPACE' in key_names:
             # return to the menu(title) screen
             self.keys_pressed.clear()
             self.game.show_menu()
-            self.game.show_highscore(self.game.level)
+            self.game.show_highscore()
             director.replace(FlipY3DTransition(Scene(my_menu)))
         elif self.game.game_status == 'STARTED':
             _input_text = ''
@@ -381,10 +380,13 @@ if __name__ == '__main__':
 
     my_game =Game()
     game_screen = ScrollingManager()
+    # the tile map 'map.tmx' which has a layer called 'start'
+    # use the editor software called 'Tiled' to make a tile map 
     map_layer = cocos.tiles.load('./data/map.tmx')['start']
     my_main = Main_Screen(my_game)
     my_menu = Menu_Screen(my_game)
 
+    # the order of the 'add' makes sense!
     game_screen.add(map_layer)
     game_screen.add(my_main)
     
