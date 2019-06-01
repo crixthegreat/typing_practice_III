@@ -9,7 +9,7 @@
 - added scrollable background in main game
 - we have music now!
 ------
-The code structure:
+### The code structure:
 
     ty3.py -- main program
         /data
