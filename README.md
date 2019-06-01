@@ -4,6 +4,11 @@
 
 ### I learned to use module package in the ty3, so the code get clear and clean significally
 ------
+### what's new in ty3
+- title screen background fix
+- added scrollable background in main game
+- we have music now!
+------
 The code structure:
 
     ty3.py -- main program
@@ -12,6 +17,8 @@ The code structure:
             Const.py -- stores the game CONSTs
             highscore.py -- handling the highscore
             highscore.tp -- the highscore data file
+            map.tmx -- the background tile map (with the layer 'start')
+            map_tile.png -- the cell image of the tile map of the background
         /materials
             __init__.py -- defines the labels, sprites, imgs to be used globally
             /background
