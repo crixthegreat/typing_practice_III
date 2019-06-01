@@ -6,20 +6,18 @@
 
 import sys
 import os
-import json
+import random
 import cocos
 from cocos.scene import Scene
 from cocos.layer import Layer, ScrollingManager, ScrollableLayer
 from cocos.director import director
-from cocos.sprite import Sprite
-from cocos.text import Label
-import data.Const as Const
+from cocos.scenes import FlipY3DTransition
 import pyglet
+from data import Const, highscore
+#import data.Const as Const
 import materials 
-import random
-import data.highscore as highscore
+#import data.highscore as highscore
 import tool.file_test as file_test
-from cocos.scenes import FadeTransition, FlipY3DTransition
 
 """Typing practice 3
 It has the very same game mechanism of typing practice 2
@@ -66,18 +64,11 @@ class Game(object):
         self.name_input_text = ''
 
 
-    def show_highscore(self):
-        """display the highscore only for menu screen
-        """
-        _data = highscore.get_highscore()
-        for _ in range(10):
-            materials.labels['highscore_label' + str(_)].element.text = '{:>10}'.format(_data[_][1]) + materials.time_format(_data[_][0])
-
-
     def show_best_time(self, level):
         """show the best time of the game player
         """
-        _best = 9999
+        _best = 99999
+        _text = 'Your Best: '
         _data = highscore.get_highscore()
         #print (_data[0], _data[1], self.player_name)
         if level == 'Normal':
@@ -91,10 +82,12 @@ class Game(object):
                     _best = _[0]
                     break
         #print(_best)
-        if _best == 9999:
-            materials.main_scr.labels['best_time_label'].element.text = 'Your Best: N/A'
+        if _best == 99999:
+            _text += 'N/A'
         else:
-            materials.main_scr.labels['best_time_label'].element.text = 'Your Best: ' + materials.time_format(_best)
+            _text += materials.time_format(_best)
+
+        materials.main_scr.labels['best_time_label'].element.text = _text
 
     
     def show_menu(self):
@@ -102,6 +95,7 @@ class Game(object):
         """
         materials.menu.show()
         materials.menu.labels['player_name_label'].element.text = self.player_name
+        materials.menu.show_highscore()
 
     def show_game(self):
         """show the game screen and initial the game
@@ -116,16 +110,16 @@ class Game(object):
         """
         _str = _str[:6]
         for _ in range(14, Const.MAX_LEN):
-            materials.sprites['alpha_str' + str(_)].visible = False
+            materials.alpha_sprite(_).visible = False
         for _ in range(len(_str)):
             _str_index = ord(_str[_])
             if _str_index >= 97:
                 _str_index -= 97
             else:
                 _str_index -= 38
-            materials.sprites['alpha_str' + str(_ + 14)].visible = True
-            materials.sprites['alpha_str' + str(_ + 14)].image = materials.alpha_image[_str_index]
-            materials.sprites['alpha_str' + str(_ + 14)].position = 100 + _ * 50, 300
+            materials.alpha_sprite(_ + 14).visible = True
+            materials.alpha_sprite(_ + 14).image = materials.alpha_image[_str_index]
+            materials.alpha_sprite(_ + 14).position = 100 + _ * 50, 300
 
 
 
@@ -156,11 +150,11 @@ class Menu_Screen(Layer):
         materials.menu.sprites['t2_sprite'].scale = 1.5
 
         self.game.show_menu()
-        self.game.show_highscore()
 
 
     def on_key_press(self, key, modifiers):
-        
+        """key press handler for menu class
+        """
         self.keys_pressed.add(key)
         key_names = [pyglet.window.key.symbol_string(k) for k in self.keys_pressed]
         
@@ -180,14 +174,14 @@ class Menu_Screen(Layer):
                 materials.menu.labels['level_label'].element.text = self.game.level
         elif 'F12' in key_names:
             file_test.init_file()
-            self.game.show_highscore()
+            materials.menu.show_highscore()
 
 
 
     def on_key_release(self, key, modifiers):
         # release the key_pressed set
         # be careful that the layer changing when key is be pressed (but not released)
-        if len(self.keys_pressed) > 0 and key in self.keys_pressed:
+        if self.keys_pressed and key in self.keys_pressed:
             self.keys_pressed.remove(key)
 
     def draw(self):
@@ -257,7 +251,7 @@ class Main_Screen(ScrollableLayer):
             if self.tx < 0:
                 self.tx = 0
             if self.ty < 0:
-                self.ty =0
+                self.ty = 0
             if self.tx > 7200:
                 self.tx = 7200
             if self.ty > 7400:
@@ -280,7 +274,6 @@ class Main_Screen(ScrollableLayer):
             # return to the menu(title) screen
             self.keys_pressed.clear()
             self.game.show_menu()
-            self.game.show_highscore()
             director.replace(FlipY3DTransition(Scene(my_menu)))
         elif self.game.game_status == 'STARTED':
             _input_text = ''
@@ -293,22 +286,22 @@ class Main_Screen(ScrollableLayer):
             elif len(key_names) == 1 and (key_names[0] in _str):
                 _input_text = key_names[0].lower()
             # use the 'prac_str' to judge the input key
-            if len(self.game.prac_str) > 0:
+            if self.game.prac_str:
                 # input the right key(char)
                 if _input_text == self.game.prac_str[0]:
-                    materials.sprites['alpha_str' + str(Const.MAX_LEN - len(self.game.prac_str))].image = materials.alpha_image[26]
+                    materials.alpha_sprite(Const.MAX_LEN - len(self.game.prac_str)).image = materials.alpha_image[26]
                     # the leftmost char disappears
                     self.game.prac_str = self.game.prac_str[1:]
                     if len(self.game.prac_str) > 10:
                         # if the string is more than 10 chars long, the strings move left
                         for _ in range(Const.MAX_LEN):
-                            _pos_x, _pos_y = materials.sprites['alpha_str' + str(_)].position
+                            _pos_x, _pos_y = materials.alpha_sprite(_).position
                             if _pos_x - 50 >= 0:
-                                materials.sprites['alpha_str' + str(_)].position = _pos_x - 50, _pos_y
+                                materials.alpha_sprite(_).position = _pos_x - 50, _pos_y
                             # or stay still
                             else:
-                                materials.sprites['alpha_str' + str(_)].position = 0, _pos_y
-                    elif len(self.game.prac_str) == 0:
+                                materials.alpha_sprite(_).position = 0, _pos_y
+                    elif not(self.game.prac_str):
                         # typing complete
                         # if the time is in top5
                         if self.game.time_passed <= highscore.top_highscore(self.game.level):
@@ -326,11 +319,11 @@ class Main_Screen(ScrollableLayer):
                 else:
                     # wrong typing
                     action = cocos.actions.RotateBy(15, 0.03) + cocos.actions.RotateBy(-15, 0.03)
-                    materials.sprites['alpha_str' + str(Const.MAX_LEN - len(self.game.prac_str))].do(action)
+                    materials.alpha_sprite(Const.MAX_LEN - len(self.game.prac_str)).do(action)
         # <<highscore mode>>
         # do key events when the game is in 'highscore' mode
         elif self.game.game_status == 'HIGHSCORE':
-            if 'ENTER' in key_names:
+            if 'ENTER' in key_names and self.game.player_name:
                 # confirm the name when get high score
                 highscore.write_highscore(self.game.level, self.game.player_name, self.game.time_passed)
                 materials.show_alpha('continue')
@@ -338,7 +331,7 @@ class Main_Screen(ScrollableLayer):
                 self.game.game_status = 'END'
             # use BACKSPACE or DELETE key to delete chars
             elif 'BACKSPACE' in key_names or 'DELETE' in key_names:
-                if len(self.game.name_input_text) > 0:
+                if self.game.name_input_text:
                     self.game.name_input_text = self.game.name_input_text[:len(self.game.name_input_text) - 1]
                     self.game.player_name = self.game.name_input_text
                     self.game.show_highscore_name(self.game.player_name)
@@ -349,7 +342,7 @@ class Main_Screen(ScrollableLayer):
                 else:
                     self.game.name_input_text += key_names[1]
                 self.game.player_name = self.game.name_input_text
-                self.show_highscore_name(self.game.player_name)
+                self.game.show_highscore_name(self.game.player_name)
             # input lower case chars
             elif len(key_names) == 1 and (key_names[0] in _str) and len(self.game.name_input_text) < 6:
                 self.game.name_input_text += key_names[0].lower()
@@ -363,8 +356,9 @@ class Main_Screen(ScrollableLayer):
 
 
     def on_key_release(self, key, modifiers):
+        
         #print('main key:', self.keys_pressed)
-        if len(self.keys_pressed) > 0 and key in self.keys_pressed:
+        if self.keys_pressed and key in self.keys_pressed:
             self.keys_pressed.remove(key)
 
     #def draw(self):
@@ -374,11 +368,12 @@ class Main_Screen(ScrollableLayer):
 
 if __name__ == '__main__':
 
-    # change the working dir to the exe temp dir for the pyinstaller 
+    # change the working dir to the exe temp dir 
+    # when you use pyinstaller to make a one-file exe package, you need doing this above
     if getattr(sys, 'frozen', False):
         os.chdir(sys._MEIPASS)
 
-    my_game =Game()
+    my_game = Game()
     game_screen = ScrollingManager()
     # the tile map 'map.tmx' which has a layer called 'start'
     # use the editor software called 'Tiled' to make a tile map 
@@ -390,7 +385,7 @@ if __name__ == '__main__':
     game_screen.add(map_layer)
     game_screen.add(my_main)
     
-    main_scene =Scene(my_menu)
+    main_scene = Scene(my_menu)
     #print ('game initialised')
     cocos.director.director.run(main_scene)
 
