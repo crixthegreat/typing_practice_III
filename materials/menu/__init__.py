@@ -12,9 +12,13 @@ import random
 
 
 images = {'t2_anime':[materials.alpha_image[26], materials.alpha_image[53]]}
-labels = {'level_label':cocos.text.Label('', font_size=20, 
-    font_name='Verdana', bold=True, 
-    color=Const.HIGHLIGHT_COLOR, x=355, y=240)}
+
+labels = dict(player_name_label=cocos.text.Label('N/A', 
+    font_size=16,font_name='Verdana', 
+    bold=False,color=Const.DEFAULT_COLOR, x=165, y=205),
+    level_label=cocos.text.Label('', font_size=20,
+        font_name='Verdana', bold=True,
+        color=Const.HIGHLIGHT_COLOR, x=355, y=240))
 
 
 t2_seq = pyglet.image.Animation.from_image_sequence(images['t2_anime'], 0.5, True)

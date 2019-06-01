@@ -9,7 +9,7 @@ import os
 import json
 import cocos
 from cocos.scene import Scene
-from cocos.layer import Layer
+from cocos.layer import Layer, ScrollingManager, ScrollableLayer
 from cocos.director import director
 from cocos.sprite import Sprite
 from cocos.text import Label
@@ -59,20 +59,40 @@ class Game(object):
         self.time_passed = 0
         # The game has 3 status: STARTED, END, HIGHSCORE
         self.game_status = 'END'
-        # prac_str is the random strings to be pacticed
+        # prac_str is the random strings to be practiced
         self.prac_str = ''
         self.player_name = player_name
         # name_input_text is used to store the input text in 'HIGHSCORE' game mode
         self.name_input_text = ''
 
 
-    def show_highscore(self):
+    def show_highscore(self, level):
         """display the highscore
         """
         _data = highscore.get_highscore()
+        _best = 9999
+        if level == 'Normal':
+            for _ in _data[0:5]:
+                if _[1] == self.player_name:
+                    _best = _[0]
+                    break
+        elif level == 'Hard':
+            for _ in _data[5:]:
+                if _[1] == self.player_name:
+                    _best = _[0]
+                    break
+
         for _ in range(10):
             materials.labels['highscore_label' + str(_)].element.text = '{:>10}'.format(_data[_][1]) + materials.time_format(_data[_][0])
 
+        if _best == 9999:
+            materials.main_scr.labels['best_time_label'].element.text = 'Your Best: N/A'
+        else:
+            materials.main_scr.labels['best_time_label'].element.text = 'Your Best: ' + materials.time_format(_best)
+          
+    def show_menu(self):
+        materials.menu.show()
+        materials.menu.labels['player_name_label'].element.text = self.player_name
 
     def show_game(self):
         """show the game screen and initial the game
@@ -121,6 +141,7 @@ class Menu_Screen(Layer):
         for _, _label in materials.menu.labels.items():
             self.add(_label)
         materials.menu.labels['level_label'].element.text = self.game.level
+        materials.menu.labels['player_name_label'].element.text = self.game.player_name
 
         for _, _sprite in materials.sprites.items():
             self.add(_sprite)
@@ -129,8 +150,8 @@ class Menu_Screen(Layer):
 
         materials.menu.sprites['t2_sprite'].scale = 1.5
 
-        materials.menu.show()
-        self.game.show_highscore()
+        self.game.show_menu()
+        self.game.show_highscore(self.game.level)
 
 
     def on_key_press(self, key, modifiers):
@@ -142,8 +163,8 @@ class Menu_Screen(Layer):
             #Start the game
             self.keys_pressed.clear()
             self.game.show_game()
-            self.game.show_highscore()
-            director.replace(Scene(my_main))
+            #self.game.show_highscore()
+            director.replace(Scene(game_screen))
         # use the LEFT or RIGHT to change the game level
         elif 'LEFT' in key_names:
             if self.game.level != 'Normal':
@@ -155,7 +176,7 @@ class Menu_Screen(Layer):
                 materials.menu.labels['level_label'].element.text = self.game.level
         elif 'F12' in key_names:
             file_test.init_file()
-            self.game.show_highscore()
+            self.game.show_highscore(self.game.level)
 
 
 
@@ -170,7 +191,7 @@ class Menu_Screen(Layer):
     
 
 
-class Main_Screen(Layer):
+class Main_Screen(ScrollableLayer):
     """The main game screen
     do a lot of key events
     """
@@ -181,25 +202,66 @@ class Main_Screen(Layer):
         super(Main_Screen, self).__init__()
         self.game = game
         self.keys_pressed = set()
-
-        self.image = materials.images['bg_img']
-
-        for _, _label in materials.labels.items():
-            self.add(_label)
+        #self.image = materials.images['bg_img']
+        self.tx = 1600
+        self.ty = 1600
+        self._move_dir = 0
+        self._moved_time = 0
+    
+        #for _, _label in materials.labels.items():
+        #    self.add(_label)
         for _, _label in materials.main_scr.labels.items():
             self.add(_label)
         for _, _sprite in materials.sprites.items():
             self.add(_sprite)
         # use the time interval event to calculate the time used
-        self.schedule_interval(self.refresh_time, 1)
+        self.schedule_interval(self.refresh_time, 0.1)
 
 
     def refresh_time(self, dt):
         # the 'dt' means the time passed after the last event occured
         if self.game.game_status == 'STARTED':
             self.game.time_passed += dt
-            materials.main_scr.labels['time_label'].element.text = materials.time_format(self.game.time_passed) 
-    
+            #print (self.game.time_passed)
+            if int(self.game.time_passed * 10) % 100 == 0:
+                self._move_dir = random.randrange(8)
+            if self._move_dir == 0:
+                self.ty -= 5
+            elif self._move_dir == 1:
+                self.ty -= 5
+                self.tx += 5
+            elif self._move_dir == 2:
+                self.tx += 5
+            elif self._move_dir == 3:
+                self.tx += 5
+                self.ty += 5
+            elif self._move_dir == 4:
+                self.ty += 5
+            elif self._move_dir == 5:
+                self.ty += 5
+                self.tx -= 5
+            elif self._move_dir == 6:
+                self.tx -= 5
+            elif self._move_dir == 7:
+                self.ty -= 5
+                self.tx -= 5
+            else:
+                print('wrong move dir')
+                sys.exit()
+          
+            if self.tx < 0:
+                self.tx = 0
+            if self.ty < 0:
+                self.ty =0
+            if self.tx > 7200:
+                self.tx = 7200
+            if self.ty > 7400:
+                self.ty = 7400
+
+
+            materials.main_scr.labels['time_label'].element.text = 'Your time: ' + materials.time_format(self.game.time_passed) 
+            #print(self.tx, self.ty)
+            map_layer.set_view(self.tx, self.ty, 800, 600) 
 
     def on_key_press(self, key, modifiers):
         # use '_str' to judge whether the alphabet key is pressed, 
@@ -212,8 +274,8 @@ class Main_Screen(Layer):
         if 'SPACE' in key_names:
             # return to the menu(title) screen
             self.keys_pressed.clear()
-            materials.menu.show()
-            self.game.show_highscore()
+            self.game.show_menu()
+            self.game.show_highscore(self.game.level)
             director.replace(FlipY3DTransition(Scene(my_menu)))
         elif self.game.game_status == 'STARTED':
             _input_text = ''
@@ -266,7 +328,6 @@ class Main_Screen(Layer):
             if 'ENTER' in key_names:
                 # confirm the name when get high score
                 highscore.write_highscore(self.game.level, self.game.player_name, self.game.time_passed)
-                self.game.show_highscore()
                 materials.show_alpha('continue')
                 self.game.game_status = 'END'
             # use BACKSPACE or DELETE key to delete chars
@@ -300,8 +361,8 @@ class Main_Screen(Layer):
         if len(self.keys_pressed) > 0 and key in self.keys_pressed:
             self.keys_pressed.remove(key)
 
-    def draw(self):
-        self.image.blit(0, 0)
+    #def draw(self):
+     #   self.image.blit(0, 0)
 
 
 
@@ -312,8 +373,14 @@ if __name__ == '__main__':
         os.chdir(sys._MEIPASS)
 
     my_game =Game()
+    game_screen = ScrollingManager()
+    map_layer = cocos.tiles.load('./data/map.tmx')['start']
     my_main = Main_Screen(my_game)
     my_menu = Menu_Screen(my_game)
+
+    game_screen.add(map_layer)
+    game_screen.add(my_main)
+    
     main_scene =Scene(my_menu)
     #print ('game initialised')
     cocos.director.director.run(main_scene)

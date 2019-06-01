@@ -17,10 +17,10 @@ time_label & best_time_label : as the name says
 """
 labels = dict(time_label=cocos.text.Label('00:00', 
     font_size=16,font_name='Verdana', 
-    bold=False,color=Const.DEFAULT_COLOR, x=165, y=205), 
+    bold=False,color=Const.DEFAULT_COLOR, x=165, y=15), 
     best_time_label=cocos.text.Label('99:59', 
         font_size=16,font_name='Verdana', 
-        bold=False,color=Const.DEFAULT_COLOR, x=555, y=205))
+        bold=False,color=Const.DEFAULT_COLOR, x=555, y=15))
 
 sprites = {}
 
