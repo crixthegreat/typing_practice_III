@@ -250,12 +250,16 @@ class Main_Screen(ScrollableLayer):
           
             if self.tx < 0:
                 self.tx = 0
+                self._move_dir = random.randrange(8)
             if self.ty < 0:
                 self.ty = 0
+                self._move_dir = random.randrange(8)
             if self.tx > 7200:
                 self.tx = 7200
+                self._move_dir = random.randrange(8)
             if self.ty > 7400:
                 self.ty = 7400
+                self._move_dir = random.randrange(8)
 
             materials.main_scr.labels['time_label'].element.text = 'Your time: ' + materials.time_format(self.game.time_passed) 
             map_layer.set_view(self.tx, self.ty, 800, 600) 

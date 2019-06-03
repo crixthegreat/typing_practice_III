@@ -8,8 +8,8 @@
 
 
 # The names
-GAME_TITLE = 'MY GAME'
-PLAYER_NAME = 'Crix'
+GAME_TITLE = 'Typing Practice 3'
+PLAYER_NAME = 'crix'
 
 # The values
 
